@@ -109,17 +109,24 @@ class Player(pygame.sprite.Sprite):
                 self.vertical_speed += self.gravity
             self.rect.y += self.vertical_speed
 
-        # Momentum hvis Jump From Right Wall
-        if self.horizontal_jump_speed_right:
-            self.horizontal_jump_speed_right += self.gravity
-            if self.horizontal_jump_speed_right <= 0:
-                self.rect.x += self.horizontal_jump_speed_right
 
-        # Momentum hvis Jump From left Wall
-        if self.horizontal_jump_speed_left:
-            self.horizontal_jump_speed_left -= self.gravity
-            if self.horizontal_jump_speed_left >= 0:
-                self.rect.x += self.horizontal_jump_speed_left
+        if self.horizontal_jump_speed_left or self.horizontal_jump_speed_right:
+
+            # Momentum hvis Jump From Right Wall
+            if self.horizontal_jump_speed_right and not self.horizontal_jump_speed_left:
+                self.horizontal_jump_speed_right += self.gravity
+                if self.horizontal_jump_speed_right <= 0:
+                    print(f"rightspeed: {self.horizontal_jump_speed_right}| attached: {self.attached_to_wall}| on right: {self.player_on_right}| on left: {self.player_on_left}")
+                    self.rect.x += self.horizontal_jump_speed_right
+
+            # Momentum hvis Jump From left Wall
+            if self.horizontal_jump_speed_left and not self.horizontal_jump_speed_right:
+                self.horizontal_jump_speed_left -= self.gravity
+                if self.horizontal_jump_speed_left >= 0:
+                    print(f"leftspeed: {self.horizontal_jump_speed_left}| attached: {self.attached_to_wall}| on left: {self.player_on_left}| on right: {self.player_on_right}")
+                    self.rect.x += self.horizontal_jump_speed_left
+            else:
+                pass
 
 
         # Gravitasjon høyere
@@ -168,9 +175,9 @@ class Player(pygame.sprite.Sprite):
             self.grounded = False
         elif self.attached_to_wall:
             if self.player_on_right:
-                self.horizontal_jump_speed_right = (self.jump_strength / 1.5)
+                self.horizontal_jump_speed_right = (self.jump_strength / 1)
             elif self.player_on_left:
-                self.horizontal_jump_speed_left = -(self.jump_strength / 1.5)
+                self.horizontal_jump_speed_left = -(self.jump_strength / 1)
             self.attached_to_wall = False  # Løsne fra veggen etter hopp
 
     def activate_parachute(self):
@@ -279,7 +286,7 @@ player = Player()
 player_sprite = pygame.sprite.GroupSingle(player)
 obstacle_sprite = pygame.sprite.Group(
 
-    Obstacle(width=500, height=50, x=700, y=700, move_range=(-50, 50), move_speed=1),
+    Obstacle(width=500, height=50, x=700, y=700, move_range=(-500, 50), move_speed=1),
     Obstacle(width=50, height=500, x=100, y=200),
     Obstacle(width=50, height=500, x=700, y=100),
     Obstacle(width=100, height=500, x=1000, y=100),
@@ -297,6 +304,7 @@ def game():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                print("space")
                 player.jump()
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:  # Ny knapp for å aktivere paraplyen
                 player.activate_parachute()
