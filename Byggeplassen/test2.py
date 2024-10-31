@@ -49,8 +49,7 @@ class Player(pygame.sprite.Sprite):
         self.vertical_speed = 0
         self.horizontal_jump_speed_right = 0
         self.horizontal_jump_speed_left = 0
-        self.jump_strength = -7
-        self.wall_jump_strength = 100  # Horisontal hoppstyrke fra veggen
+        self.jump_strength = -4
         self.moving_right = False
         self.moving_left = False
         self.moving_up = False
@@ -58,6 +57,7 @@ class Player(pygame.sprite.Sprite):
         self.grounded = False
         self.attached_to_wall = False  # Ny variabel for å sjekke om spilleren er festet til veggen
         self.using_parachute = False
+        self.can_jump = True
 
         # Flytt variablene inn i Player-klassen
         self.player_on_right = False
@@ -66,6 +66,18 @@ class Player(pygame.sprite.Sprite):
         self.player_on_bottom = False
 
     def update(self):
+        if self.grounded and self.attached_to_wall:
+            if self.player_on_right:
+                self.rect.x -= 1
+                self.rect.y -= 1
+                self.attached_to_wall = False
+                self.player_on_right = False
+            if self.player_on_left:
+                self.rect.x += 1
+                self.rect.y -= 1
+                self.attached_to_wall = False
+                self.player_on_left = False
+
         # Bruker de nye attributtene i stedet for globale variabler
         if wind_strength != 0 and not (self.grounded or self.attached_to_wall):
             self.rect.x += wind_strength
@@ -90,6 +102,7 @@ class Player(pygame.sprite.Sprite):
                     self.rect.y -= self.speed
             self.horizontal_jump_speed_right = 0
             self.horizontal_jump_speed_left = 0
+
 
         else:
             # Standard horisontal bevegelse
@@ -116,14 +129,14 @@ class Player(pygame.sprite.Sprite):
             if self.horizontal_jump_speed_right and not self.horizontal_jump_speed_left:
                 self.horizontal_jump_speed_right += self.gravity
                 if self.horizontal_jump_speed_right <= 0:
-                    print(f"rightspeed: {self.horizontal_jump_speed_right}| attached: {self.attached_to_wall}| on right: {self.player_on_right}| on left: {self.player_on_left}")
+                    #print(f"rightspeed: {self.horizontal_jump_speed_right}| attached: {self.attached_to_wall}| on right: {self.player_on_right}| on left: {self.player_on_left}")
                     self.rect.x += self.horizontal_jump_speed_right
 
             # Momentum hvis Jump From left Wall
             if self.horizontal_jump_speed_left and not self.horizontal_jump_speed_right:
                 self.horizontal_jump_speed_left -= self.gravity
                 if self.horizontal_jump_speed_left >= 0:
-                    print(f"leftspeed: {self.horizontal_jump_speed_left}| attached: {self.attached_to_wall}| on left: {self.player_on_left}| on right: {self.player_on_right}")
+                    #print(f"leftspeed: {self.horizontal_jump_speed_left}| attached: {self.attached_to_wall}| on left: {self.player_on_left}| on right: {self.player_on_right}")
                     self.rect.x += self.horizontal_jump_speed_left
             else:
                 pass
@@ -173,7 +186,7 @@ class Player(pygame.sprite.Sprite):
         if self.grounded:
             self.vertical_speed = self.jump_strength
             self.grounded = False
-        elif self.attached_to_wall:
+        elif self.attached_to_wall and self.can_jump:
             if self.player_on_right:
                 self.horizontal_jump_speed_right = (self.jump_strength / 1)
             elif self.player_on_left:
@@ -187,10 +200,10 @@ class Player(pygame.sprite.Sprite):
 
 
 class Obstacle(pygame.sprite.Sprite):
-    def __init__(self, width, height, x, y, move_range=(0, 0), move_speed=0):
+    def __init__(self, color, width, height, x, y, move_range=(0, 0), move_speed=0):
         super().__init__()
         self.image = pygame.Surface((width, height))
-        self.image.fill((255, 0, 0))  # Fyll fargen rød (bruker RGB i stedet for variabelen red her)
+        self.image.fill((color))  # Fyll fargen rød (bruker RGB i stedet for variabelen red her)
         self.rect = self.image.get_rect(topleft=(x, y))
 
         # Bevegelsesrelaterte variabler
@@ -202,7 +215,7 @@ class Obstacle(pygame.sprite.Sprite):
 
     def update(self):
         # Oppdater bevegelse
-        if self.move_speed > 0 and self.move_counter > 10:
+        if self.move_speed > 0 and self.move_counter > 5:
             # Sjekker om objektet er utenfor bevegelsesområdet
             if (self.rect.x > self.start_x + self.move_range[1] and self.direction > 0) or \
                (self.rect.x < self.start_x + self.move_range[0] and self.direction < 0):
@@ -223,6 +236,7 @@ class Obstacle(pygame.sprite.Sprite):
 
         # Kollisjonslogikk for sidene
         if self.rect.colliderect(player.rect):
+            player.using_parachute = False
             if player.rect.right > self.rect.left and player.rect.left < self.rect.left:
                 player.rect.right = self.rect.left
                 player.grounded = False
@@ -285,13 +299,14 @@ def handle_weather():
 player = Player()
 player_sprite = pygame.sprite.GroupSingle(player)
 obstacle_sprite = pygame.sprite.Group(
-
-    Obstacle(width=500, height=50, x=700, y=700, move_range=(-500, 50), move_speed=1),
-    Obstacle(width=50, height=500, x=100, y=200),
-    Obstacle(width=50, height=500, x=700, y=100),
-    Obstacle(width=100, height=500, x=1000, y=100),
-    Obstacle(width=50, height=500, x=400, y=200),
-    Obstacle(width=500, height=50, x=800, y=600),
+    Obstacle(color=red, width=500, height=50, x=700, y=700, move_range=(-500, 50), move_speed=1),
+    Obstacle(color=maroon, width=50, height=900, x=100, y=200),
+    Obstacle(color=blue, width=50, height=500, x=700, y=100),
+    Obstacle(color=cyan, width=100, height=500, x=1000, y=100),
+    Obstacle(color=lime, width=50, height=500, x=400, y=200),
+    Obstacle(color=green, width=500, height=50, x=800, y=600),
+    Obstacle(color=navy, width=50, height=50, x=1300, y=10),
+    Obstacle(color=fuchsia, width=250, height=50, x=1000, y=800, move_range=(-500, 50), move_speed=2),
 )
 
 
@@ -306,6 +321,10 @@ def game():
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 print("space")
                 player.jump()
+                player.can_jump = False
+            elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
+                print("spacedog")
+                player.can_jump = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:  # Ny knapp for å aktivere paraplyen
                 player.activate_parachute()
 

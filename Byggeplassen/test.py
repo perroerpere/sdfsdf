@@ -66,6 +66,7 @@ class Player(pygame.sprite.Sprite):
         self.player_on_bottom = False
 
     def update(self):
+        print(self.grounded, self.attached_to_wall)
         # Bruker de nye attributtene i stedet for globale variabler
         if wind_strength != 0 and not (self.grounded or self.attached_to_wall):
             self.rect.x += wind_strength
