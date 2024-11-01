@@ -23,15 +23,20 @@ navy = (0, 0, 128)
 
 background = pygame.image.load("GameBackground.jpg")
 
-width = 1500
-height = 1000
+window_width = 1500
+window_height = 1000
+
+world_width = 5000
+world_height = 5000
+
+
 
 weather_active = False
 wind_strength = 0  # Holder styrke for vinden
 ground_slippery = False  # Om bakken er glatt (pga regn)
 
 pygame.init()
-screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption("Byggeplassen")
 pygame.key.set_repeat(True)
 
@@ -43,13 +48,13 @@ class Player(pygame.sprite.Sprite):
 
         self.image = pygame.Surface((25, 25))
         self.image.fill(black)
-        self.rect = self.image.get_rect(center=(width / 2, height / 2))
+        self.rect = self.image.get_rect(center=(window_width / 2, window_height / 2))
         self.speed = 2
         self.gravity = 0.05
         self.vertical_speed = 0
         self.horizontal_jump_speed_right = 0
         self.horizontal_jump_speed_left = 0
-        self.jump_strength = -4
+        self.jump_strength = -6
         self.moving_right = False
         self.moving_left = False
         self.moving_up = False
@@ -153,8 +158,8 @@ class Player(pygame.sprite.Sprite):
             self.rect.x -= self.vertical_speed
 
         # Sjekk bunnkollisjon
-        if self.rect.bottom >= height:
-            self.rect.bottom = height
+        if self.rect.bottom >= window_height:
+            self.rect.bottom = window_height
             self.vertical_speed = 0
             self.horizontal_jump_speed_right = 0
             self.horizontal_jump_speed_left = 0
@@ -163,7 +168,7 @@ class Player(pygame.sprite.Sprite):
             self.grounded = False
 
     def movement(self, keys):
-        self.moving_right = keys[pygame.K_d] and not self.attached_to_wall and self.rect.right < width
+        self.moving_right = keys[pygame.K_d] and not self.attached_to_wall and self.rect.right < window_width
         self.moving_left = keys[pygame.K_a] and not self.attached_to_wall and self.rect.left > 0
 
 
@@ -266,6 +271,8 @@ class Obstacle(pygame.sprite.Sprite):
 
 
 
+
+
 def update_cycle(keys):
     player_sprite.update()
     player.movement(keys)
@@ -298,7 +305,8 @@ def handle_weather():
 # Initialiser spiller og hindringer
 player = Player()
 player_sprite = pygame.sprite.GroupSingle(player)
-obstacle_sprite = pygame.sprite.Group(
+
+level1 = (
     Obstacle(color=red, width=500, height=50, x=700, y=700, move_range=(-500, 50), move_speed=1),
     Obstacle(color=maroon, width=50, height=900, x=100, y=200),
     Obstacle(color=blue, width=50, height=500, x=700, y=100),
@@ -308,6 +316,34 @@ obstacle_sprite = pygame.sprite.Group(
     Obstacle(color=navy, width=50, height=50, x=1300, y=10),
     Obstacle(color=fuchsia, width=250, height=50, x=1000, y=800, move_range=(-500, 50), move_speed=2),
 )
+level2 = (
+    Obstacle(color=blue, width=50, height=50, x=100, y=900),
+    Obstacle(color=blue, width=50, height=50, x=666, y=806),
+    Obstacle(color=blue, width=50, height=250, x=0, y=300),
+    Obstacle(color=blue, width=250, height=50, x=258, y=171),
+    Obstacle(color=blue, width=50, height=500, x=740, y=0),
+    Obstacle(color=blue, width=150, height=50, x=970, y=330),
+    Obstacle(color=blue, width=150, height=50, x=1200, y=180),
+    Obstacle(color=blue, width=125, height=50, x=300, y=900, move_range=(-100, 100), move_speed=1),
+    Obstacle(color=blue, width=125, height=50, x=300, y=600, move_range=(-100, 100), move_speed=1),
+    Obstacle(color=blue, width=125, height=50, x=840, y=575, move_range=(-100, 100), move_speed=1),
+
+)
+level3 = (
+    Obstacle(color=blue, width=50, height=350, x=100, y=100),
+    Obstacle(color=blue, width=50, height=350, x=100, y=650),
+    Obstacle(color=blue, width=50, height=350, x=400, y=100),
+    Obstacle(color=blue, width=50, height=350, x=400, y=650),
+    Obstacle(color=blue, width=50, height=350, x=700, y=100),
+    Obstacle(color=blue, width=50, height=350, x=700, y=650),
+    Obstacle(color=blue, width=50, height=350, x=1000, y=100),
+    Obstacle(color=blue, width=50, height=350, x=1000, y=650),
+    Obstacle(color=blue, width=50, height=350, x=1300, y=100),
+    Obstacle(color=blue, width=50, height=350, x=1300, y=650),
+)
+
+
+obstacle_sprite = pygame.sprite.Group(level1)
 
 
 # Hovedspilleløkken
@@ -327,6 +363,9 @@ def game():
                 player.can_jump = True
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:  # Ny knapp for å aktivere paraplyen
                 player.activate_parachute()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                print(mx, my)
 
         keys = pygame.key.get_pressed()
         update_cycle(keys)
